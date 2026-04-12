@@ -66,6 +66,7 @@ export default function ExerciseLibrary() {
     setAiTip('')
     setQuestion('')
     setTab('guide')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const AnimComp = selected ? (exerciseAnimations[selected.id] || null) : null
