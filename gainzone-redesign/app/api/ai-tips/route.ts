@@ -1,29 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { supabase } from '@/lib/supabase'
 
-export const runtime = 'nodejs'
+export async function GET(req: NextRequest) {
+  const deviceId = req.nextUrl.searchParams.get('device_id')
+  if (!deviceId) return NextResponse.json(null)
+
+  const { data } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('device_id', deviceId)
+    .single()
+
+  return NextResponse.json(data || null)
+}
 
 export async function POST(req: NextRequest) {
-  const { exercise, question } = await req.json()
+  const body = await req.json()
+  const { device_id, ...profile } = body
 
-  const prompt = question
-    ? `You are GainZone AI, a knowledgeable gym coach. Answer this question about "${exercise}": ${question}. Be concise, practical, and use plain language. Max 120 words.`
-    : `You are GainZone AI, a knowledgeable gym coach. Give 3 advanced form tips for the "${exercise}" that most gym-goers miss. Format as numbered points. Each tip max 30 words. Focus on biomechanics and common mistakes.`
+  if (!device_id) return NextResponse.json({ error: 'Missing device_id' }, { status: 400 })
 
-  try {
-    const Groq = (await import('groq-sdk')).default
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .upsert(
+      { device_id, ...profile, updated_at: new Date().toISOString() },
+      { onConflict: 'device_id' }
+    )
+    .select()
+    .single()
 
-    const completion = await groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
-      messages: [{ role: 'user', content: prompt }],
-      max_tokens: 300,
-    })
-
-    return NextResponse.json({
-      tip: completion.choices[0].message.content
-    })
-  } catch (err) {
-    console.error('Groq error:', err)
-    return NextResponse.json({ error: 'AI unavailable' }, { status: 500 })
-  }
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data)
 }
