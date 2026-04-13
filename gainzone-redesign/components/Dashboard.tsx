@@ -1,6 +1,7 @@
 'use client'
-import { useEffect, useState } from 'react'
-import { exercises, pplProgram } from '@/lib/exercises'
+import { useEffect, useState, useCallback } from 'react'
+import { exercises, pplProgram, type Exercise } from '@/lib/exercises'
+import { ExerciseModal } from './ExerciseModal'
 
 const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
 const todayName = DAYS[new Date().getDay()]
@@ -11,12 +12,18 @@ export default function Dashboard({ onNavigate }: { onNavigate: (tab: string) =>
   const isRest = todayPlan?.type === 'Rest'
   const weekDone = [true, true, true, false, false, false, false]
   const [gifMap, setGifMap] = useState<Record<string, string>>({})
+  const [selected, setSelected] = useState<Exercise | null>(null)
 
   useEffect(() => {
     fetch('/api/exercise-gifs')
       .then(r => r.json())
       .then(data => setGifMap(data))
       .catch(() => {})
+  }, [])
+
+  const closeModal = useCallback(() => {
+    if (window.history.state?.modal) window.history.back()
+    setSelected(null)
   }, [])
 
   return (
@@ -54,13 +61,13 @@ export default function Dashboard({ onNavigate }: { onNavigate: (tab: string) =>
       </div>
 
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '14px', marginBottom: '1.5rem' }}>
-        <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-display)', fontWeight: 500, letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>This Week</div>
+        <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-display)', letterSpacing: '1px', marginBottom: '12px', textTransform: 'uppercase' }}>This Week</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: '4px' }}>
           {['M','T','W','T','F','S','S'].map((d, i) => {
             const done = weekDone[i]
             const isToday = i === ((new Date().getDay() + 6) % 7)
             return (
-              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div style={{
                   width: '32px', height: '32px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontFamily: 'var(--font-display)', fontSize: '11px', fontWeight: 500,
@@ -74,12 +81,20 @@ export default function Dashboard({ onNavigate }: { onNavigate: (tab: string) =>
         </div>
       </div>
 
+      {/* Today's exercises — tap to open modal */}
       {!isRest && todayExes.length > 0 && (
         <>
-          <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-display)', letterSpacing: '1px', marginBottom: '10px', textTransform: 'uppercase' }}>Today's Exercises</div>
+          <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--font-display)', letterSpacing: '1px', marginBottom: '10px', textTransform: 'uppercase' }}>
+            Today's Exercises — tap to view
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '1.5rem' }}>
             {todayExes.slice(0, 4).map(ex => ex && (
-              <div key={ex.id} className="card-glow" style={{ cursor: 'pointer', overflow: 'hidden', padding: 0 }} onClick={() => onNavigate('exercises')}>
+              <div
+                key={ex.id}
+                className="card-glow"
+                style={{ cursor: 'pointer', overflow: 'hidden', padding: 0 }}
+                onClick={() => setSelected(ex)}
+              >
                 {gifMap[ex.id] && (
                   <div style={{ height: '80px', overflow: 'hidden', borderBottom: '1px solid var(--border)' }}>
                     <img src={gifMap[ex.id]} alt={ex.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -114,6 +129,11 @@ export default function Dashboard({ onNavigate }: { onNavigate: (tab: string) =>
           </button>
         ))}
       </div>
+
+      {/* Modal — same as exercise section */}
+      {selected && (
+        <ExerciseModal selected={selected} gifMap={gifMap} onClose={closeModal} />
+      )}
     </div>
   )
 }
