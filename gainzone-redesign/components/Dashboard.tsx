@@ -6,13 +6,29 @@ import { ExerciseModal } from './ExerciseModal'
 const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
 const todayName = DAYS[new Date().getDay()]
 
-export default function Dashboard({ onNavigate }: { onNavigate: (tab: string) => void }) {
+export default function Dashboard({ onNavigate, profile }: { onNavigate: (tab: string) => void, profile?: any }) {
   const todayPlan = pplProgram.days.find(d => d.day === todayName)
   const todayExes = todayPlan?.exercises.map(id => exercises.find(e => e.id === id)).filter(Boolean) || []
   const isRest = todayPlan?.type === 'Rest'
   const weekDone = [true, true, true, false, false, false, false]
   const [gifMap, setGifMap] = useState<Record<string, string>>({})
   const [selected, setSelected] = useState<Exercise | null>(null)
+
+  useEffect(() => {
+    if (profile?.name) {
+      const ctx = [
+        `Name: ${profile.name}`,
+        profile.age && `Age: ${profile.age}`,
+        profile.gender && `Gender: ${profile.gender}`,
+        profile.weight_kg && `Weight: ${profile.weight_kg}kg`,
+        profile.goal && `Goal: ${profile.goal}`,
+        profile.experience && `Experience: ${profile.experience}`,
+        profile.equipment && `Equipment: ${profile.equipment}`,
+        profile.injuries && `Injuries: ${profile.injuries}`,
+      ].filter(Boolean).join(' | ')
+      ;(window as any).__gainzoneProfile = ctx
+    }
+  }, [profile])
 
   useEffect(() => {
     fetch('/api/exercise-gifs')

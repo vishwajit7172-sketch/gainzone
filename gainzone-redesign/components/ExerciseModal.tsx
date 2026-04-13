@@ -46,7 +46,7 @@ export function ExerciseModal({
       const res = await fetch('/api/ai-tips', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ exercise: ex.name, question: q || '' })
+        body: JSON.stringify({ exercise: ex.name, question: q || '', userContext: (window as any).__gainzoneProfile || '' })
       })
       const data = await res.json()
       setAiTip(data.tip || 'No tips available.')

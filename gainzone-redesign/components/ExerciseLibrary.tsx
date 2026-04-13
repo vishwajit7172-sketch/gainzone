@@ -15,11 +15,27 @@ const FILTERS: { id: 'all' | MuscleGroup; label: string }[] = [
   { id: 'calisthenics', label: 'Calisthenics' },
 ]
 
-export default function ExerciseLibrary() {
+export default function ExerciseLibrary({ profile }: { profile?: any }) {
   const [filter, setFilter] = useState<'all' | MuscleGroup>('all')
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<Exercise | null>(null)
   const [gifMap, setGifMap] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    if (profile?.name) {
+      const ctx = [
+        `Name: ${profile.name}`,
+        profile.age && `Age: ${profile.age}`,
+        profile.gender && `Gender: ${profile.gender}`,
+        profile.weight_kg && `Weight: ${profile.weight_kg}kg`,
+        profile.goal && `Goal: ${profile.goal}`,
+        profile.experience && `Experience: ${profile.experience}`,
+        profile.equipment && `Equipment: ${profile.equipment}`,
+        profile.injuries && `Injuries: ${profile.injuries}`,
+      ].filter(Boolean).join(' | ')
+      ;(window as any).__gainzoneProfile = ctx
+    }
+  }, [profile])
 
   useEffect(() => {
     fetch('/api/exercise-gifs')
