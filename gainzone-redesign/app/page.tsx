@@ -70,7 +70,7 @@ export default function Home() {
       <main className="main-content">
         {tab === 'dashboard' && <Dashboard onNavigate={setTab} profile={profile} />}
         {tab === 'exercises' && <ExerciseLibrary profile={profile} />}
-        {tab === 'planner'   && <PlanBuilder profile={profile} />}
+        {tab === 'planner'   && <PlanBuilder />}
         {tab === 'log'       && <WorkoutLog />}
         {tab === 'tools'     && <ToolsHub />}
         {tab === 'profile'   && <Profile />}
