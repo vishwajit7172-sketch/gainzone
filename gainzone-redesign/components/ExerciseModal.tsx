@@ -19,7 +19,11 @@ export function ExerciseModal({
   const [question, setQuestion] = useState('')
   const [mounted, setMounted] = useState(false)
 
-  useEffect(() => { setMounted(true) }, [])
+  useEffect(() => {
+    setMounted(true)
+    // Pre-fetch AI tips in background so they're ready when user taps AI Coach
+    fetchAiTips(selected)
+  }, [])
 
   // Back button closes modal
   useEffect(() => {
@@ -116,7 +120,7 @@ export function ExerciseModal({
           <div style={{ padding: '1rem 1.5rem 0' }}>
             <div className="tab-bar">
               <button className={`tab-item ${tab === 'guide' ? 'active' : ''}`} onClick={() => setTab('guide')}>Form Guide</button>
-              <button className={`tab-item ${tab === 'ai' ? 'active' : ''}`} onClick={() => { setTab('ai'); if (!aiTip) fetchAiTips(selected) }}>AI Coach</button>
+              <button className={`tab-item ${tab === 'ai' ? 'active' : ''}`} onClick={() => { setTab('ai'); if (!aiTip && !aiLoading) fetchAiTips(selected) }}>AI Coach</button>
             </div>
           </div>
 
