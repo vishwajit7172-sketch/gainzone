@@ -25,11 +25,11 @@ const TABS = [
 export default function Home() {
   const [tab, setTab] = useState('dashboard')
   const [showAdmin, setShowAdmin] = useState(false)
-  const { profile, loading, saveProfile, isComplete } = useProfile()
+  const { profile, loading, saveProfile, isComplete, hasSeenOnboarding } = useProfile()
 
   if (showAdmin) return <AdminPanel onBack={() => setShowAdmin(false)} />
 
-  if (!loading && !isComplete && profile && !profile.name) {
+  if (!loading && !hasSeenOnboarding) {
     return <Onboarding onComplete={async (data) => { await saveProfile(data) }} />
   }
 
