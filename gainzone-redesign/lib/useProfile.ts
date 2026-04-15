@@ -12,6 +12,7 @@ export type UserProfile = {
   days_per_week?: number
   equipment?: string
   injuries?: string
+  skipped?: boolean   // tracks "skip for now" so onboarding doesn't loop
 }
 
 function getOrCreateDeviceId(): string {
@@ -24,34 +25,68 @@ function getOrCreateDeviceId(): string {
   return id
 }
 
+function loadLocalProfile(deviceId: string): UserProfile | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(`gainzone_profile_${deviceId}`)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+function saveLocalProfile(profile: UserProfile) {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(`gainzone_profile_${profile.device_id}`, JSON.stringify(profile))
+  } catch {}
+}
+
 export function useProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const deviceId = getOrCreateDeviceId()
+
+    // Load from localStorage immediately — no network flash
+    const local = loadLocalProfile(deviceId)
+    if (local) {
+      setProfile(local)
+      setLoading(false)
+      return
+    }
+
+    // Otherwise try server (Supabase path)
     fetch(`/api/user-profile?device_id=${deviceId}`)
       .then(r => r.json())
       .then(data => {
-        setProfile(data || { device_id: deviceId })
+        const p = (data && data.device_id) ? data : { device_id: deviceId }
+        setProfile(p)
+        saveLocalProfile(p)
         setLoading(false)
       })
       .catch(() => {
-        setProfile({ device_id: deviceId })
+        const p = { device_id: deviceId }
+        setProfile(p)
+        saveLocalProfile(p)
         setLoading(false)
       })
   }, [])
 
   async function saveProfile(updates: Partial<UserProfile>) {
     const deviceId = getOrCreateDeviceId()
-    const updated = { ...profile, ...updates, device_id: deviceId }
-    setProfile(updated as UserProfile)
+    const updated: UserProfile = { ...profile, ...updates, device_id: deviceId }
+    setProfile(updated)
+    saveLocalProfile(updated)   // always persist locally first
 
-    await fetch('/api/user-profile', {
+    // Fire-and-forget to server — won't break if it fails
+    fetch('/api/user-profile', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updated)
-    })
+    }).catch(() => {})
+
     return updated
   }
 
@@ -65,7 +100,10 @@ export function useProfile() {
     profile?.experience
   )
 
-  return { profile, loading, saveProfile, isComplete }
+  // User has completed onboarding OR explicitly clicked "Skip for now"
+  const hasSeenOnboarding = isComplete || !!profile?.skipped
+
+  return { profile, loading, saveProfile, isComplete, hasSeenOnboarding }
 }
 
 // Build a profile summary string to inject into AI prompts
