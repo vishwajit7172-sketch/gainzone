@@ -230,7 +230,7 @@ export default function Onboarding({ onComplete }: { onComplete: (profile: Parti
 
         {step === 0 && (
           <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-            <button onClick={() => onComplete({})} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '12px', fontFamily: 'var(--font-display)' }}>
+            <button onClick={() => onComplete({ skipped: true })} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '12px', fontFamily: 'var(--font-display)' }}>
               Skip for now
             </button>
           </div>
