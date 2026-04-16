@@ -13,13 +13,13 @@ import GymScanner from '@/components/GymScanner'
 import { useProfile } from '@/lib/useProfile'
 
 const TABS = [
-  { id: 'dashboard', label: 'Today',   icon: HomeIcon },
+  { id: 'dashboard', label: 'Today',     icon: HomeIcon },
   { id: 'exercises', label: 'Exercises', icon: DumbIcon },
-  { id: 'scanner',   label: 'Scan',    icon: ScanIcon },
-  { id: 'planner',   label: 'Plan',    icon: PlanIcon },
-  { id: 'log',       label: 'Log',     icon: LogIcon  },
-  { id: 'tools',     label: 'Tools',   icon: ToolIcon },
-  { id: 'profile',   label: 'Profile', icon: UserIcon },
+  { id: 'scanner',   label: 'Scan',      icon: ScanIcon },
+  { id: 'planner',   label: 'Plan',      icon: PlanIcon },
+  { id: 'log',       label: 'Log',       icon: LogIcon  },
+  { id: 'tools',     label: 'Tools',     icon: ToolIcon },
+  { id: 'profile',   label: 'Profile',   icon: UserIcon },
 ]
 
 export default function Home() {
@@ -28,36 +28,54 @@ export default function Home() {
   const { profile, loading, saveProfile, isComplete, hasSeenOnboarding } = useProfile()
 
   if (showAdmin) return <AdminPanel onBack={() => setShowAdmin(false)} />
-
   if (!loading && !hasSeenOnboarding) {
     return <Onboarding onComplete={async (data) => { await saveProfile(data) }} />
   }
 
   return (
     <div className="app-layout">
+      {/* ── SIDEBAR (desktop) ── */}
       <aside className="sidebar">
-        <div style={{ marginBottom: '2rem', paddingLeft: '2px' }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 500, letterSpacing: '2px', color: 'var(--text)' }}>GAINZONE</div>
-          {profile?.name && (
-            <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '5px', fontFamily: 'var(--font-display)' }}>Hey, {profile.name} 👋</div>
-          )}
+        {/* Brand */}
+        <div style={{ marginBottom: '2.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border)' }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: '34px', letterSpacing: '3px', color: 'var(--accent)', lineHeight: 1 }}>GAINZONE</div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--muted)', marginTop: '5px', letterSpacing: '1.5px' }}>
+            {profile?.name ? `HEY, ${profile.name.toUpperCase()} 💪` : 'AI GYM COACH'}
+          </div>
         </div>
+
+        {/* Nav items */}
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} className={`nav-item ${tab === t.id ? 'active' : ''}`}>
             <t.icon size={14} />
             {t.label}
           </button>
         ))}
+
         <div style={{ flex: 1 }} />
-        <button onClick={() => setShowAdmin(true)}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', fontFamily: 'var(--font-display)', fontSize: '10px', letterSpacing: '0.5px', textTransform: 'uppercase', width: '100%', transition: 'all 0.15s' }}
-          onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--border-hover)' }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'var(--muted)'; e.currentTarget.style.borderColor = 'var(--border)' }}
+
+        {/* XP / Level block */}
+        <div style={{ marginBottom: '1rem', padding: '14px', background: 'var(--surface2)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--muted)', letterSpacing: '1px' }}>LEVEL 4</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--accent)' }}>2400 XP</span>
+          </div>
+          <div className="xp-bar-wrap">
+            <div className="xp-bar-fill" style={{ width: '68%' }} />
+          </div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: 'var(--muted)', marginTop: '6px' }}>600 XP TO BEAST MODE</div>
+        </div>
+
+        <button
+          onClick={() => setShowAdmin(true)}
+          className="btn-ghost"
+          style={{ width: '100%', justifyContent: 'center', display: 'flex', gap: '8px', alignItems: 'center' }}
         >
           <LockIcon size={12} /> Admin
         </button>
       </aside>
 
+      {/* ── MAIN CONTENT ── */}
       <main className="main-content">
         {tab === 'dashboard' && <Dashboard onNavigate={setTab} profile={profile} />}
         {tab === 'exercises' && <ExerciseLibrary profile={profile} />}
@@ -68,6 +86,7 @@ export default function Home() {
         {tab === 'profile'   && <Profile />}
       </main>
 
+      {/* ── BOTTOM NAV (mobile) ── */}
       <nav className="bottom-nav">
         {TABS.map(t => (
           <button key={t.id} className={`bottom-nav-btn ${tab === t.id ? 'active' : ''}`} onClick={() => setTab(t.id)}>
@@ -76,7 +95,8 @@ export default function Home() {
           </button>
         ))}
         <button className="bottom-nav-btn" onClick={() => setShowAdmin(true)}>
-          <LockIcon size={18} /> Admin
+          <LockIcon size={18} />
+          Admin
         </button>
       </nav>
     </div>
@@ -86,10 +106,10 @@ export default function Home() {
 function ToolsHub() {
   const [tool, setTool] = useState<'timer' | 'calculator'>('timer')
   return (
-    <div>
-      <div style={{ marginBottom: '1.5rem' }}>
+    <div className="slide-up">
+      <div style={{ marginBottom: '2rem' }}>
+        <div className="section-label" style={{ marginBottom: '8px' }}>Utilities</div>
         <div className="page-title">TOOLS</div>
-        <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '8px', fontFamily: 'var(--font-display)' }}>timer · calculators</div>
       </div>
       <div className="tab-bar" style={{ marginBottom: '1.5rem', maxWidth: '280px' }}>
         <button className={`tab-item ${tool === 'timer' ? 'active' : ''}`} onClick={() => setTool('timer')}>Rest Timer</button>
